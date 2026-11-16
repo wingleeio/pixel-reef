@@ -1,0 +1,89 @@
+{
+  "id": "pixel-reef",
+  "name": "Pixel Reef",
+  "version": "0.1.0",
+  "description": "An animated pixel-art underwater scene drawn from gaussian splats: fish, jellyfish, a turtle, a manta, kelp and light rays. Behind a new chat, and dimmed behind your chats.",
+  "icon": "icon.svg",
+  "entry": "init.luau",
+  "permissions": [
+    "ui.change",
+    "ui.add"
+  ],
+  "ui": {
+    "change": [
+      "#new-chat-background"
+    ]
+  },
+  "settings_description": "A pixel-art reef drawn from gaussian splats. Use it as the new chat wallpaper, and keep a muted version behind your chats.",
+  "settings": [
+    {
+      "kind": "wallpaper",
+      "section": "Wallpaper"
+    },
+    {
+      "id": "pixel",
+      "kind": "choice",
+      "style": "segmented",
+      "section": "Look",
+      "label": "Pixel size",
+      "description": "How chunky the pixels are.",
+      "default": "classic",
+      "options": [
+        {
+          "value": "fine",
+          "label": "Fine"
+        },
+        {
+          "value": "classic",
+          "label": "Classic"
+        },
+        {
+          "value": "chunky",
+          "label": "Chunky"
+        }
+      ]
+    },
+    {
+      "id": "chats",
+      "kind": "switch",
+      "section": "Behind chats",
+      "label": "Show behind chats",
+      "description": "A slower, faded reef behind an open chat's messages.",
+      "default": true
+    },
+    {
+      "id": "strength",
+      "kind": "choice",
+      "style": "segmented",
+      "section": "Behind chats",
+      "label": "Strength",
+      "description": "How much of the reef shows through behind messages.",
+      "default": "subtle",
+      "options": [
+        {
+          "value": "subtle",
+          "label": "Subtle"
+        },
+        {
+          "value": "medium",
+          "label": "Medium"
+        },
+        {
+          "value": "vivid",
+          "label": "Vivid"
+        }
+      ]
+    }
+  ],
+  "signature": {
+    "key": "nOj8xsqr5fKAqVhDLJJG_s1C9NCf5zHaDiXlwx-l1SM",
+    "files": {
+      "README.md": "acaeb24ca3db4796ffe55ea2242b48b0e72755c42af9a7a0fa31aab9869c2485",
+      "icon.svg": "5bd17191dcaef399b2817f9a570f2456c4ba31aa2c73d9beeafbd8a42bc3c5a3",
+      "init.luau": "c78b0a04402760c81b6a17405fc55d15a5300fb95c9283282f71866c16d6407c",
+      "reef_wgsl.luau": "75234834ffecdde6255be9b7430f671516dd2eeaeebb643ea730e2cb7c60cbe3",
+      "zeron.luau": "178b79b55566c9643b26181539b8e1348482179a169da98ba384cd66f3f8a483"
+    },
+    "sig": "VZiwnEKT8AMoG5Z5DuTkSChdTIYnd6WlulKH11OlVG0cHc8lLJilohamiGQlAcDnu4wSwMOXgOprV9wBQ5VYCw"
+  }
+}
