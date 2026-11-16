@@ -1,8 +1,8 @@
 {
-  "id": "pixel-reef",
-  "name": "Pixel Reef",
+  "id": "deep-reef",
+  "name": "Deep Reef",
   "version": "0.1.0",
-  "description": "An animated pixel-art underwater scene drawn from gaussian splats: fish, jellyfish, a turtle, a manta, kelp and light rays. Behind a new chat, and dimmed behind your chats.",
+  "description": "A pixel-art coral reef in the deep, in 3D: fish, a turtle, a manta, jellyfish and kelp over lit rock and coral, in a small palette. Behind a new chat and, faded, behind your chats.",
   "icon": "icon.svg",
   "entry": "init.luau",
   "permissions": [
@@ -14,7 +14,7 @@
       "#new-chat-background"
     ]
   },
-  "settings_description": "A pixel-art reef drawn from gaussian splats. Use it as the new chat wallpaper, and keep a muted version behind your chats.",
+  "settings_description": "A pixel-art coral reef in the deep. Use it as the new chat wallpaper, and keep a faded one behind your chats.",
   "settings": [
     {
       "kind": "wallpaper",
@@ -26,7 +26,7 @@
       "style": "segmented",
       "section": "Look",
       "label": "Pixel size",
-      "description": "How chunky the pixels are.",
+      "description": "How large each art pixel is.",
       "default": "classic",
       "options": [
         {
@@ -42,6 +42,14 @@
           "label": "Chunky"
         }
       ]
+    },
+    {
+      "id": "dither",
+      "kind": "switch",
+      "section": "Look",
+      "label": "Dither",
+      "description": "Blend neighbouring palette colours with a checker pattern, for a grainier look.",
+      "default": false
     },
     {
       "id": "chats",
@@ -78,12 +86,18 @@
   "signature": {
     "key": "nOj8xsqr5fKAqVhDLJJG_s1C9NCf5zHaDiXlwx-l1SM",
     "files": {
-      "README.md": "acaeb24ca3db4796ffe55ea2242b48b0e72755c42af9a7a0fa31aab9869c2485",
-      "icon.svg": "5bd17191dcaef399b2817f9a570f2456c4ba31aa2c73d9beeafbd8a42bc3c5a3",
-      "init.luau": "c78b0a04402760c81b6a17405fc55d15a5300fb95c9283282f71866c16d6407c",
-      "reef_wgsl.luau": "75234834ffecdde6255be9b7430f671516dd2eeaeebb643ea730e2cb7c60cbe3",
+      "README.md": "3f7f197c8b1def7956517dbad9157c5d3c61b38e989389593b95eac3b5bc0c7f",
+      "icon.svg": "dc903c57bfcd556430a567adc2f5bd5d3fc717d091625d63fd1a791e29f05188",
+      "init.luau": "ce93bcd2c8bd5522b1e612894d652764d91e80c5dc63aa9a7054e5a9d2261a1d",
+      "reef_wgsl.luau": "4160c5cb91740a74c3a86f86e906c0c99135cdfd38ada127330e925f02dc58f0",
+      "src/build.py": "ad616c609f2867649101cc5e82f96cb0ee39b6065505123a25bf86f30a155f1f",
+      "src/common.wgsl": "59f229083677a68e37f6f75f6fe029050c1d6ab7c5378a344fbf4c80640bba94",
+      "src/ground.wgsl": "f0aeebece86c1fad0ee85c5349a81f19adc3b840a36b7e7c4625aeb97caa0887",
+      "src/head.txt": "a2d51a7b5b01b05735452c471287549615ce12164bf411b9093c3f36d37acd94",
+      "src/live.wgsl": "e230a35b880b216b39fa3cf2c16d857f824784c08d378fc4db66cc5331be9954",
+      "src/show.wgsl": "887e65108019bcdbb6350179a6fbd0485a35933c6c7660c486fc206dfa158def",
       "zeron.luau": "178b79b55566c9643b26181539b8e1348482179a169da98ba384cd66f3f8a483"
     },
-    "sig": "VZiwnEKT8AMoG5Z5DuTkSChdTIYnd6WlulKH11OlVG0cHc8lLJilohamiGQlAcDnu4wSwMOXgOprV9wBQ5VYCw"
+    "sig": "N4nFH0wCbIbUh4bgBFkR5bq94ojH6d0zP8q-RQzVHVbUChh-y4V7uCLLTNZEC1EE-lrWPzHo-WA7LUzzt_iOAQ"
   }
 }

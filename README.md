@@ -1,33 +1,48 @@
-# Pixel Reef
+# Deep Reef
 
-A Zeron plugin: an animated, pixel-art underwater reef drawn from gaussian splats, behind a new chat and, faded, behind your chats.
+A Zeron plugin: a pixel-art coral reef in the deep, behind a new chat and, faded, behind your chats.
 
-Clownfish, tangs, a butterflyfish, a wrasse and a grouper; a school of silver fish; a sea turtle; a manta ray gliding overhead; pulsing jellyfish; swaying kelp, coral and anemones; light rays, caustics, rising bubbles and marine snow.
+Clownfish circle an anemone; a blue tang, bannerfish and a big violet grouper cross at different depths; a school of silver fish, a sea turtle and a manta ray pass; jellyfish rise, glowing. Kelp sways over boulders, branching and brain corals, sea fans, tube sponges and small glowing buds. Light shafts fall from the surface, marine snow sinks, bubbles rise.
 
-## How it's drawn
+## The look
 
-Everything runs on the GPU, in `reef_wgsl.luau`:
+It follows the pixel-art gaussian splats at [splats.cobanov.dev](https://splats.cobanov.dev): forms sculpted in 3D, every surface point lit (a key light from above, occlusion, a grain per material, warm light pooling round what glows) and coloured through a ramp; the picture drawn small; translucent things (light shafts, a jellyfish's glow, the reef's far edge) cut to on/off pixels by a Bayer threshold; every pixel the nearest of a small palette. The scene, its models and its palette are this plugin's own.
 
-- **Splats.** Every creature is a cloud of small anisotropic gaussian splats (rows of scale-like splats along a fish's outline, fanned tail rays, shell plates, segmented manta wings, a jellyfish's dome), composited back to front.
-- **Pixel art.** The scene is rendered by a shader pass at one texel per art pixel. Each splat's falloff is posterized to three steps with a 4×4 Bayer threshold, so splats read as crisp pixel ellipses with dithered rims, lit from above. The water is banded by depth, dithered only where bands meet, and the frame is rounded to a small palette. A layer shader then scales it up nearest-neighbour.
-- **Underwater.** Far creatures fade into the blue and lose their reds, rows of pixels waver like light bending through water, and on the new chat page the layers shift with the pointer for parallax.
-- **Cheap.** Zeron's compositor steps the clock (`layer_clock`), so no script runs per frame; the scene costs well under a millisecond of GPU per frame at 15 fps (10 fps behind chats), whatever the window size.
+There, a model is sampled into tens of thousands of flat splats. A Zeron plugin can't rasterize that many, so here a shader finds each art pixel's surface point directly and shades it the same way; a splat there is about one art pixel, so the result reads the same.
+
+## How it runs
+
+Everything is on the GPU, in `reef_wgsl.luau`, at one texel per art pixel:
+
+- **GROUND**: the still scenery, drawn once (and again when the window changes size) and kept.
+- **LIVE**: what moves, drawn each frame over it: 24 frames a second behind a new chat, 15 behind chats.
+- **SHOW**: scales the result up, nearest-neighbour.
+
+Zeron's compositor steps the clock, so no script runs per frame.
 
 ## Install
 
 In Zeron: **Settings → Plugins → Install…**, then the repository `wingleeio/pixel-reef`.
 
-Then on **Settings → Plugins → Pixel Reef**:
+## Settings
+
+**Settings → Plugins → Deep Reef**:
 
 - **Use as wallpaper**: turns it on behind a new chat (only you can, there).
 - **Pixel size**: Fine, Classic or Chunky.
-- **Show behind chats** and **Strength**: the faded reef behind a chat's messages (Subtle, Medium or Vivid).
+- **Dither**: blends neighbouring palette colours with a checker pattern.
+- **Show behind chats** and **Strength**: the faded reef behind a chat's messages.
 
 It asks for `ui.change` (to draw a new chat's background) and `ui.add` (to place the reef behind the transcript), nothing else.
 
 ## Files
 
 - `zeron-plugin.json`: the manifest, its settings, and Zeron's signature.
-- `init.luau`: where the reef is placed, its settings, the shader's parameters.
-- `reef_wgsl.luau`: the scene (`SCENE`, the pass) and the upscale (`SHOW`), in WGSL.
+- `init.luau`: where the reef is placed, its settings, the shaders' parameters.
+- `reef_wgsl.luau`: the three shader sources, built by `python3 src/build.py`.
+- `src/`: what that's built from. `build.py` lays out the reef (rocks, corals, kelp, fish, the palette) as tables; `common.wgsl` is shared by `ground.wgsl` (the still scenery) and `live.wgsl` (what moves); `show.wgsl` is the upscale.
 - `zeron.luau`: Zeron's plugin SDK.
+
+## History
+
+This repository first held Pixel Reef, a flat 2D reef. Deep Reef replaced it.

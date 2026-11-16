@@ -1,26 +1,30 @@
--- Pixel Reef: an underwater scene drawn as pixel art from gaussian splats.
+-- Deep Reef: a pixel-art coral reef in the deep, behind a new chat and,
+-- faded, behind your chats.
 --
--- All of it runs on the GPU (reef_wgsl.luau). A shader pass renders the scene
--- at one texel per art pixel: every creature is a cloud of small anisotropic
--- gaussian splats, each splat's falloff posterized with a Bayer threshold so
--- it reads as a crisp pixel ellipse. A layer shader then blows that texture up
--- nearest-neighbour over the box. The engine steps time on its own clock
+-- The whole scene runs on the GPU (reef_wgsl.luau), at one texel per art
+-- pixel. The still scenery (sand, boulders, corals) is a pass drawn once and
+-- kept; what moves (fish, a turtle, a manta, jellyfish, kelp, light shafts,
+-- snow, bubbles) is a pass drawn each frame over it; a layer shader scales
+-- the result up nearest-neighbour. The engine steps time on its own clock
 -- (`layer_clock`), so no script runs per frame.
 --
 -- Two places:
---   #new-chat-background  the full reef, as a wallpaper (with parallax)
---   #chat-session         the same reef, slower and faded, behind a chat
+--   #new-chat-background  the reef framed round the message box, as a wallpaper
+--   #transcript           the same reef, slower and faded, behind a chat
 
-local zeron = require("./zeron")("pixel-reef")
+local zeron = require("./zeron")("deep-reef")
 local reef = require("./reef_wgsl")
 
 local s_pixel = zeron.setting("pixel")
+local s_dither = zeron.setting("dither")
 local s_chats = zeron.setting("chats")
 local s_strength = zeron.setting("strength")
 
 -- Screen pixels per art pixel (on a Retina screen, half as many points).
-local PIXEL = { fine = 8, classic = 12, chunky = 18 }
-local FPS = { wall = 15, chat = 10 }
+local PIXEL = { fine = 8, classic = 10, chunky = 14 }
+local FPS = { wall = 24, chat = 15 }
+-- How strongly neighbouring palette colours are dithered, when that's on.
+local DITHER = 0.9
 
 -- One compiled effect per pixel size and pace, made as first needed.
 local shaders: { [string]: any } = {}
@@ -30,7 +34,13 @@ local function shader(px: number, mode: string): any
 	if s == nil then
 		s = ui.layer_shader(reef.SHOW, {
 			fps = FPS[mode],
-			passes = { { name = "reef", shader = reef.SCENE, scale = 1 / px } },
+			passes = {
+				-- The still scenery: light, material, depth and warm light per
+				-- art pixel (past 0 to 1, so in floats), drawn once.
+				{ name = "ground", shader = reef.GROUND, scale = 1 / px, format = "rgba16float", once = true },
+				-- What moves, over it, each frame.
+				{ name = "reef", shader = reef.LIVE, scale = 1 / px },
+			},
 		})
 		shaders[key] = s
 	end
@@ -40,13 +50,15 @@ end
 shader(PIXEL.classic, "wall")
 shader(PIXEL.classic, "chat")
 
-local function Reef(mode: string, px: number, params: any): Node
+-- params: { -, -, dither, speed }, { alpha, brightness, zoom, lift },
+-- { open water's alpha, how muted, -, - }.
+local function Scene(mode: string, px: number, params: { any }): Node
 	return ui.div {
 		w_full = true,
 		h_full = true,
-		-- (Shown while the shader compiles. A layer shader filters what its box
+		-- (Shown while the shaders compile. A layer shader filters what its box
 		-- paints, so behind a chat it gets a fill too, one nobody can see.)
-		bg = if mode == "wall" then "#0f4a70" else "#0a1e3001",
+		bg = if mode == "wall" then "#0a1730" else "#0a173001",
 		layer_shader = shader(px, mode),
 		layer_clock = true,
 		layer_params = params,
@@ -55,35 +67,33 @@ local function Reef(mode: string, px: number, params: any): Node
 	}
 end
 
-local function num(v: any): number
-	return if type(v) == "number" then v else 0.5
-end
-
--- Behind a new chat: the full reef, its layers following the pointer.
+-- Behind a new chat: the camera tipped down a little, so the reef stands
+-- round the message box and over Zeron's fade at the foot.
 zeron.place {
 	at = "#new-chat-background",
 	fill = true,
 	replace = function(): Node
-		local pointer = zeron.live("pointer")
 		return ui.presence(function(): string
-			return s_pixel:get() or "classic"
+			return `{s_pixel:get() or "classic"}|{if s_dither:get() == true then "1" else "0"}`
 		end, function(key: string): Node
-			return Reef("wall", PIXEL[key] or PIXEL.classic, function(): { any }
-				local p = if pointer then pointer() else nil
-				local x = if type(p) == "table" then num(p.x) else 0.5
-				local y = if type(p) == "table" then num(p.y) else 0.5
-				return { { x, y, 0, 0 }, { 1, 1, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } }
-			end)
+			local pixel, dither = string.match(key, "^(.-)|(.*)$")
+			return Scene("wall", PIXEL[pixel or "classic"] or PIXEL.classic, {
+				{ 0, 0, if dither == "1" then DITHER else 0, 1 },
+				{ 1, 1, 0.95, -0.42 },
+				-- (Muted a little, as the chats' is by its fade.)
+				{ 1, 0.2, 0, 0 },
+				{ 0, 0, 0, 0 },
+			})
 		end, { w_full = true, h_full = true })
 	end,
 }
 
 -- Behind a chat: the same reef, slower and faded so the messages read. It's
 -- placed by the transcript: the column holding it is a positioned box (the
--- area messages scroll in), which the reef fills.
+-- area messages scroll in).
 local STRENGTH = {
-	dark = { subtle = 0.3, medium = 0.45, vivid = 0.6 },
-	light = { subtle = 0.16, medium = 0.24, vivid = 0.34 },
+	dark = { subtle = 0.4, medium = 0.55, vivid = 0.75 },
+	light = { subtle = 0.2, medium = 0.3, vivid = 0.45 },
 }
 
 zeron.place {
@@ -105,18 +115,19 @@ zeron.place {
 					return "off"
 				end
 				local look = if appearance and appearance() == "light" then "light" else "dark"
-				return `{look}|{s_strength:get() or "subtle"}|{s_pixel:get() or "classic"}`
+				local dither = if s_dither:get() == true then "1" else "0"
+				return `{look}|{s_strength:get() or "subtle"}|{s_pixel:get() or "classic"}|{dither}`
 			end, function(key: string): Node
 				if key == "off" then
 					return ui.div {}
 				end
-				local look, strength, pixel = string.match(key, "^(.-)|(.-)|(.*)$")
+				local look, strength, pixel, dither = string.match(key, "^(.-)|(.-)|(.-)|(.*)$")
 				local levels = STRENGTH[look or "dark"] or STRENGTH.dark
 				local alpha = levels[strength or "subtle"] or levels.subtle
-				return Reef("chat", PIXEL[pixel or "classic"] or PIXEL.classic, {
-					{ 0.5, 0.5, 0, 0 },
-					{ alpha, 0.85, 0, 0 },
-					{ 0, 0, 0, 0 },
+				return Scene("chat", PIXEL[pixel or "classic"] or PIXEL.classic, {
+					{ 0, 0, if dither == "1" then DITHER else 0, 0.8 },
+					{ alpha, 1, 1, 0 },
+					{ 1, 0, 0, 0 },
 					{ 0, 0, 0, 0 },
 				})
 			end, { w_full = true, h_full = true }),
